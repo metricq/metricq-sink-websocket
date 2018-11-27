@@ -1,6 +1,7 @@
 import logging
 import traceback
 
+import asyncio
 import click
 import click_completion
 import click_log
