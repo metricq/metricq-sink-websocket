@@ -26,6 +26,7 @@ click_completion.init()
 async def start_background_tasks(app):
     app['sink'] = Sink(app['token'], app["management_url"], event_loop=app.loop)
     await app['sink'].connect()
+    logger.info('Background task ready.')
 
 
 async def cleanup_background_tasks(app):

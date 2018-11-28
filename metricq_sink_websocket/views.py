@@ -8,6 +8,7 @@ logger = get_logger(__name__)
 
 
 async def websocket_handler(request):
+    logger.info('Websocket handler')
     ws = aiohttp.web.WebSocketResponse()
     await ws.prepare(request)
     logger.info('Websocket opened')
@@ -15,6 +16,7 @@ async def websocket_handler(request):
     metrics = None
     async for msg in ws:
         if msg.type == aiohttp.WSMsgType.TEXT:
+            logger.debug('Parsing message: {}', msg.data)
             try:
                 msg_data = json.loads(msg.data)
                 if msg_data['function'] == 'subscribe':
