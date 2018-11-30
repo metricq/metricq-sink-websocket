@@ -1,4 +1,5 @@
 import json
+import asyncio
 
 import aiohttp
 
@@ -14,24 +15,32 @@ async def websocket_handler(request):
     logger.info('Websocket opened')
     sink = request.app['sink']
     metrics = None
-    async for msg in ws:
-        if msg.type == aiohttp.WSMsgType.TEXT:
-            logger.debug('Parsing message: {}', msg.data)
-            try:
-                msg_data = json.loads(msg.data)
-                if msg_data['function'] == 'subscribe':
-                    assert metrics is None
-                    metrics = msg_data['metrics']
-                    await sink.subscribe(ws, metrics)
-            except Exception as e:
-                logger.error('error during message handling {}', e)
+    try:
+        async for msg in ws:
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                logger.debug('Parsing message: {}', msg.data)
+                try:
+                    msg_data = json.loads(msg.data)
+                    if msg_data['function'] == 'subscribe':
+                        assert metrics is None
+                        metrics = msg_data['metrics']
+                        await sink.subscribe_ws(ws, metrics)
+                except Exception as e:
+                    logger.error('error during message handling {}', e)
+                    break
+            elif msg.type == aiohttp.WSMsgType.ERROR:
+                logger.error('ws connection closed with exception {}', ws.exception())
                 break
-        elif msg.type == aiohttp.WSMsgType.ERROR:
-            logger.error('ws connection closed with exception {}', ws.exception())
-            break
+        logger.info('finished websocket message loop normally')
+    except Exception as e:
+        logger.error("error during websocket message loop: {}", e)
+        pass
 
     if metrics is not None:
-        await sink.unsubscribe(ws, metrics)
+        # aiohttp brutally murders our task when the browser is closed hard
+        # we must defend our precious unsubscription!
+        # FOR AIUR
+        await asyncio.shield(sink.unsubscribe_ws(ws, metrics))
 
     logger.info('Websocket closed')
     return ws
