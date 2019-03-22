@@ -11,20 +11,22 @@ class Sink(metricq.Sink):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._subscriptions = defaultdict(set)
+        self._last_send = defaultdict(int)
 
     async def connect(self):
         await super().connect()
         await self.subscribe(metrics=[])
 
     async def on_data(self, metric, timestamp, value):
-        if self._subscriptions[metric]:
+        if self._subscriptions[metric] and self._last_send[metric] < timestamp.posix_ns - 500000000:
+            self._last_send[metric] = timestamp.posix_ns
             for ws in frozenset(self._subscriptions[metric]):
                 logger.debug('Sending {} to {}', metric, ws)
                 try:
                     await ws.send_str(json.dumps({"data": [{"id": metric, "ts": timestamp.posix_ns, "value": value}]}))
                 except ConnectionResetError:
                     logger.info('Unsubscribing stale websocket {} from metric {}', ws, metric)
-                    await self.unsubscribe(ws, [metric])
+                    await self.unsubscribe_ws(ws, [metric])
 
     async def subscribe_ws(self, ws, metrics):
         for metric in metrics:
