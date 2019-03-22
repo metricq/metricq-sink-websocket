@@ -65,6 +65,10 @@ var MetricqWebSocket = function (uri) {
       return
     }
 
+    if (!Array.isArray(metrics)) {
+      metrics = [metrics]
+    }
+
     metricqWS.metrics = metrics
 
     webSocket.send(JSON.stringify({
