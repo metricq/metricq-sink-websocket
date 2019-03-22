@@ -1,8 +1,6 @@
 from collections import defaultdict
 import json
 
-import asyncio
-
 import metricq
 from metricq import get_logger
 
@@ -23,7 +21,7 @@ class Sink(metricq.Sink):
             for ws in frozenset(self._subscriptions[metric]):
                 logger.debug('Sending {} to {}', metric, ws)
                 try:
-                    await ws.send_str(json.dumps({"data": [{"id": metric, "ts": timestamp, "value": value}]}))
+                    await ws.send_str(json.dumps({"data": [{"id": metric, "ts": timestamp.posix_ns, "value": value}]}))
                 except ConnectionResetError:
                     logger.info('Unsubscribing stale websocket {} from metric {}', ws, metric)
                     await self.unsubscribe(ws, [metric])
