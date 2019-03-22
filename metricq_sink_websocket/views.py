@@ -14,7 +14,7 @@ async def websocket_handler(request):
     await ws.prepare(request)
     logger.info('Websocket opened')
     sink = request.app['sink']
-    metrics = None
+    metrics = set()
     try:
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:
@@ -22,11 +22,11 @@ async def websocket_handler(request):
                 try:
                     msg_data = json.loads(msg.data)
                     if msg_data['function'] == 'subscribe':
-                        assert metrics is None
-                        metrics = msg_data['metrics']
-                        await sink.subscribe_ws(ws, metrics)
+                        new_metrics = set(msg_data['metrics'])
+                        await sink.subscribe_ws(ws, new_metrics - metrics)
+                        metrics |= new_metrics
                 except Exception as e:
-                    logger.error('error during message handling {}', e)
+                    logger.error('error during message handling: {}', e)
                     break
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 logger.error('ws connection closed with exception {}', ws.exception())
@@ -36,11 +36,11 @@ async def websocket_handler(request):
         logger.error("error during websocket message loop: {}", e)
         pass
 
-    if metrics is not None:
+    if metrics:
         # aiohttp brutally murders our task when the browser is closed hard
         # we must defend our precious unsubscription!
         # FOR AIUR
-        await asyncio.shield(sink.unsubscribe_ws(ws, metrics))
+        await asyncio.shield(sink.unsubscribe_ws(ws, list(metrics)))
 
     logger.info('Websocket closed')
     return ws
