@@ -26,7 +26,7 @@ var MetricqWebSocket = function (uri) {
       var response = JSON.parse(message.data)
       if (response.hasOwnProperty('error')) {
         console.log('[MetricqWebSocket] Received error message:' + response.error)
-        metricqWS.onError(response)
+        metricqWS.onError(response.error)
       } else if (response.hasOwnProperty('data')) {
         for (var datapoint of response.data) {
           metricqWS.onData(datapoint.id, datapoint.ts, datapoint.value)
@@ -88,6 +88,8 @@ var MetricqWebSocket = function (uri) {
     if (webSocket) {
       metricqWS.unsubscribe()
       webSocket.close()
+    } else {
+      metricqWS.onError('No connection to close.')
     }
   }
 }

@@ -9,23 +9,43 @@ $(document).ready(function () {
     mq = new MetricqWebSocket($('#uri').val())
 
     mq.onData = function (id, ts, val) {
-      $('#data').append(id + ': ' + ts + ' @ ' + val + '\n')
+      $('#data').append(id + ': ' + ts + ' @ ' + val + '\n').scrollTop($('#data')[0].scrollHeight)
     }
 
     mq.onOpen = function (event) {
       $('#data').append('Connected.\n')
 
-      mq.subscribe(['dummy.source'])
+      mq.subscribe(['elab.bakha.power'])
     }
 
     mq.onConnecting = function (uri) {
+      $('#data').html('')
       $('#data').append('Connecting to ' + uri + '\n')
+      $('#connect').hide()
+      $('#disconnect').show()
     }
 
     mq.onError = function (event) {
       $('#data').append('He\'s dead Jimmy. (' + event.message + ')\n')
+
+      $('#connect').show()
+      $('#disconnect').hide()
+
       mq = null
     }
+
+    mq.onClose = function (event) {
+      $('#data').append('Connection closed. (' + event.message + ')\n')
+      $('#connect').show()
+      $('#disconnect').hide()
+      mq = null
+    }
+
     mq.connect()
+  })
+
+  $('#disconnect').hide()
+  $('#disconnect').click(function () {
+    mq.close()
   })
 })
