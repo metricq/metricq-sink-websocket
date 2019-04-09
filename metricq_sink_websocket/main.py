@@ -33,7 +33,7 @@ async def cleanup_background_tasks(app):
     pass
 
 
-def create_app(loop, token, management_url, management_exchange):
+def create_app(loop, token, management_url, management_exchange, port):
     app = web.Application(loop=loop)
     app['token'] = token
     app['management_url'] = management_url
@@ -46,7 +46,7 @@ def create_app(loop, token, management_url, management_exchange):
     cors = aiohttp_cors.setup(app, defaults={
         # Allow all to read all CORS-enabled resources from
         # http://client.example.org.
-        "http://localhost:3000": aiohttp_cors.ResourceOptions(
+        f"http://localhost:{port}": aiohttp_cors.ResourceOptions(
             allow_headers=("Content-Type", ),
         ),
     })
@@ -67,11 +67,12 @@ def panic(loop, context):
 @click.argument('management-url', default='amqp://localhost/')
 @click.option('--token', default='metricq-sink-websocket')
 @click.option('--management-exchange', default='metricq.management')
+@click.option('--port', default='3000')
 @click_log.simple_verbosity_option(logger)
-def runserver_cmd(management_url, token, management_exchange):
+def runserver_cmd(management_url, token, management_exchange, port):
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
-    #loop.set_exception_handler(panic)
-    app = create_app(loop, token, management_url, management_exchange)
+    # loop.set_exception_handler(panic)
+    app = create_app(loop, token, management_url, management_exchange, port)
     # logger.info("starting management loop")
-    web.run_app(app, port=4000)
+    web.run_app(app, port=port)
