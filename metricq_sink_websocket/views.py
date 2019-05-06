@@ -5,15 +5,18 @@ import aiohttp
 
 from metricq import get_logger
 
+from .web_socket import MetricqWebSocketResponse
+
+
 logger = get_logger(__name__)
 
 
 async def websocket_handler(request):
     logger.info('Websocket handler')
-    ws = aiohttp.web.WebSocketResponse()
+    sink = request.app['sink']
+    ws = MetricqWebSocketResponse(sink)
     await ws.prepare(request)
     logger.info('Websocket opened')
-    sink = request.app['sink']
     metrics = set()
     try:
         async for msg in ws:

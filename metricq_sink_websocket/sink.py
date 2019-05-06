@@ -22,11 +22,7 @@ class Sink(metricq.Sink):
             self._last_send[metric] = timestamp.posix_ns
             for ws in frozenset(self._subscriptions[metric]):
                 logger.debug('Sending {} to {}', metric, ws)
-                try:
-                    await ws.send_str(json.dumps({"data": [{"id": metric, "ts": timestamp.posix_ns, "value": value}]}))
-                except ConnectionResetError:
-                    logger.info('Unsubscribing stale websocket {} from metric {}', ws, metric)
-                    await self.unsubscribe_ws(ws, [metric])
+                await ws.send_data(metric, timestamp, value)
 
     async def subscribe_ws(self, ws, metrics):
         subscribe_metrics = set()
