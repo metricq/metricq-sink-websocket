@@ -71,7 +71,7 @@ def panic(loop, context):
 @click_log.simple_verbosity_option(logger)
 def runserver_cmd(management_url, token, management_exchange, port):
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
+    # loop.set_debug(True)
     # loop.set_exception_handler(panic)
     app = create_app(loop, token, management_url, management_exchange, port)
     # logger.info("starting management loop")

@@ -29,18 +29,22 @@ class Sink(metricq.Sink):
                     await self.unsubscribe_ws(ws, [metric])
 
     async def subscribe_ws(self, ws, metrics):
+        subscribe_metrics = set()
         for metric in metrics:
             if not self._subscriptions[metric]:
-                # TODO bulk subscription
-                await self.subscribe([metric])
+                subscribe_metrics.add(metric)
             self._subscriptions[metric].add(ws)
+        if subscribe_metrics:
+            await self.subscribe(list(subscribe_metrics))
 
     async def unsubscribe_ws(self, ws, metrics):
+        unsubscribe_metrics = set()
         for metric in metrics:
             try:
                 self._subscriptions[metric].remove(ws)
                 if not self._subscriptions[metric]:
-                    # TODO bulk unsubscription
-                    await self.unsubscribe([metric])
+                    unsubscribe_metrics.add(metric)
             except KeyError as ke:
                 logger.error("failed to unsubscribe metric {}: {}", metric, ke)
+        if unsubscribe_metrics:
+            await self.unsubscribe(list(unsubscribe_metrics))
