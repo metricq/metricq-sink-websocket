@@ -31,7 +31,10 @@ class Sink(metricq.Sink):
                 subscribe_metrics.add(metric)
             self._subscriptions[metric].add(ws)
         if subscribe_metrics:
-            await self.subscribe(list(subscribe_metrics))
+            result = await self.subscribe(list(subscribe_metrics))
+            for metric, metadata in result['metrics'].items():
+                if 'error' in metadata:
+                    logger.warning('missing metric: {}', metric)
 
     async def unsubscribe_ws(self, ws, metrics):
         unsubscribe_metrics = set()
