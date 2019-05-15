@@ -10,4 +10,4 @@ setup(name='metricq_sink_websocket',
       [console_scripts]
       metricq-sink-websocket=metricq_sink_websocket:runserver_cmd
       ''',
-      install_requires=['aiohttp', 'aiohttp-cors', 'click', 'click-completion', 'click_log', 'colorama', 'metricq'])
+      install_requires=['aiohttp', 'aiohttp-cors', 'bidict', 'click', 'click-completion', 'click_log', 'colorama', 'metricq'])
