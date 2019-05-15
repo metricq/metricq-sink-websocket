@@ -70,6 +70,14 @@ def panic(loop, context):
 @click.option('--port', default='3000')
 @click_log.simple_verbosity_option(logger)
 def runserver_cmd(management_url, token, management_exchange, port):
+    try:
+        import uvloop
+        asyncio.get_event_loop().close()
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        logger.info('using uvloop as event loop')
+    except ImportError:
+        logger.debug('using default event loop')
+
     loop = asyncio.get_event_loop()
     # loop.set_debug(True)
     # loop.set_exception_handler(panic)
