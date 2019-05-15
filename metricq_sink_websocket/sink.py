@@ -61,6 +61,7 @@ class Sink(metricq.DurableSink):
 
             for metric in unknown_metrics:
                 if self._suffix_metric(metric) in available_metrics:
+                    logger.info('using suffix {} for primary {}', self._suffix_metric(metric), metric)
                     self._internal_name_by_primary_name[metric] = self._suffix_metric(metric)
                 else:
                     if metric not in available_metrics:
