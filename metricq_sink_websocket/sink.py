@@ -40,7 +40,7 @@ class Sink(metricq.DurableSink):
             return internal_metric
         return self._internal_name_by_primary_name.inverse[internal_metric]
 
-    def _primary_to_internal(self, primary_metric: Union[str, Iterable[str]]) -> Union[str, List[str]]:
+    def _primary_to_internal(self, primary_metric: Union[str, List[str]]) -> Union[str, List[str]]:
         if self._internal_name_by_primary_name is None:
             return primary_metric
         if isinstance(primary_metric, list):
@@ -70,7 +70,7 @@ class Sink(metricq.DurableSink):
 
     async def subscribe(self, metrics: Iterable[str]) -> None:
         if self._suffix:
-            self._resolve_primary_metrics(metrics)
+            await self._resolve_primary_metrics(metrics)
 
         await super().subscribe(self._primary_to_internal(metrics))
 
