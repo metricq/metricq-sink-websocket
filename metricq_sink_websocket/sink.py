@@ -62,6 +62,11 @@ class Sink(metricq.DurableSink):
             for metric in unknown_metrics:
                 if self._suffix_metric(metric) in available_metrics:
                     self._internal_name_by_primary_name[metric] = self._suffix_metric(metric)
+                else:
+                    if metric not in available_metrics:
+                        logger.warn('trying to subscribe to metric with no metadata {}', metric)
+                    # For now, let's just subscribe even if it may not be in the metadata
+                    self._internal_name_by_primary_name[metric] = metric
 
     async def subscribe(self, metrics: Iterable[str]) -> None:
         if self._suffix:
