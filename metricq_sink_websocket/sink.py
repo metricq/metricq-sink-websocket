@@ -27,8 +27,8 @@ class Sink(metricq.DurableSink):
         await self.subscribe(metrics=[])
 
     @metricq.rpc_handler('config')
-    async def config(self, suffix: Optional[str]=None, min_interval: str = '0.5s', **_) -> None:
-        self._min_interval = metricq.Timedelta.from_string(min_interval)
+    async def config(self, suffix: Optional[str]=None, skip_interval: str = '0.5s', **_) -> None:
+        self._min_interval = metricq.Timedelta.from_string(skip_interval)
 
         async with self._mapping_lock:
             self._suffix = suffix
