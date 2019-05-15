@@ -1,7 +1,7 @@
 import asyncio
 from collections import defaultdict
 import json
-from typing import Union, List, Iterable
+from typing import Union, List, Iterable, Optional
 
 from bidict import bidict
 
@@ -20,13 +20,16 @@ class Sink(metricq.DurableSink):
         self._internal_name_by_primary_name = None
         self._suffix = None
         self._mapping_lock = asyncio.Lock()
+        self._min_interval = None
 
     async def connect(self):
         await super().connect()
         await self.subscribe(metrics=[])
 
     @metricq.rpc_handler('config')
-    async def config(self, suffix=None, **_) -> None:
+    async def config(self, suffix: Optional[str]=None, min_interval: str = '0.5s', **_) -> None:
+        self._min_interval = metricq.Timedelta.from_string(min_interval)
+
         async with self._mapping_lock:
             self._suffix = suffix
             if self._suffix:
@@ -80,8 +83,8 @@ class Sink(metricq.DurableSink):
 
     async def on_data(self, metric, timestamp, value):
         primary_metric = self._internal_to_primary(metric)
-        if self._subscriptions[primary_metric] and self._last_send[primary_metric] < timestamp.posix_ns - 500000000:
-            self._last_send[primary_metric] = timestamp.posix_ns
+        if self._subscriptions[primary_metric] and self._last_send[primary_metric] + self._min_interval < timestamp:
+            self._last_send[primary_metric] = timestamp
             for ws in frozenset(self._subscriptions[primary_metric]):
                 logger.debug('Sending {} to {}', primary_metric, ws)
                 await ws.send_data(primary_metric, timestamp, value)
