@@ -30,7 +30,7 @@ class MetricqWebSocketResponse(aiohttp.web.WebSocketResponse):
         self._flush_task = None
 
     async def flush(self):
-        logger.info('flushing {} ', len(self._buffer))
+        logger.debug('flushing buffer with {} values', len(self._buffer))
         try:
             await self.send_json({'data': self._buffer})
         except ConnectionResetError:

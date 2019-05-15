@@ -29,14 +29,14 @@ async def websocket_handler(request):
                         await sink.subscribe_ws(ws, new_metrics - metrics)
                         metrics |= new_metrics
                 except Exception as e:
-                    logger.error('error during message handling: {}', e)
+                    logger.error('error during message handling {}: {}', type(e), e)
                     break
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 logger.error('ws connection closed with exception {}', ws.exception())
                 break
         logger.info('finished websocket message loop normally')
     except Exception as e:
-        logger.error("error during websocket message loop: {}", e)
+        logger.error("error during websocket message loop {}: {}", type(e), e)
         pass
 
     if metrics:
