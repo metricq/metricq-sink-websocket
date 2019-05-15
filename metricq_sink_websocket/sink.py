@@ -19,7 +19,7 @@ class Sink(metricq.DurableSink):
 
         self._internal_name_by_primary_name = None
         self._suffix = None
-        self._mapping_lock = asyncio.Lock
+        self._mapping_lock = asyncio.Lock()
 
     async def connect(self):
         await super().connect()
