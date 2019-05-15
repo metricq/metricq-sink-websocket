@@ -15,7 +15,7 @@ class Sink(metricq.DurableSink):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._subscriptions = defaultdict(set)
-        self._last_send = defaultdict(int)
+        self._last_send = defaultdict(lambda: metricq.Timestamp(0))
 
         self._internal_name_by_primary_name = None
         self._suffix = None

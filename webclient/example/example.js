@@ -15,7 +15,7 @@ $(document).ready(function () {
     mq.onOpen = function (event) {
       $('#data').append('Connected.\n')
 
-      mq.subscribe(['elab.bakha.power'])
+      mq.subscribe(['elab.ariel.s0.package.power'])
     }
 
     mq.onConnecting = function (uri) {
