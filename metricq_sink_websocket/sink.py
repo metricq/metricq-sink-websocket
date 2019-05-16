@@ -59,7 +59,7 @@ class Sink(metricq.DurableSink):
         # at the same time for redundant information
         async with self._mapping_lock:
             unknown_metrics = set(metrics) - set(self._internal_name_by_primary_name.keys())
-            possible_metrics = [*metrics, *[self._suffix_metric(metric) for metric in unknown_metrics]]
+            possible_metrics = [*unknown_metrics, *[self._suffix_metric(metric) for metric in unknown_metrics]]
             available_metrics = set(await self.get_metrics(selector=possible_metrics, metadata=False))
 
             for metric in unknown_metrics:
