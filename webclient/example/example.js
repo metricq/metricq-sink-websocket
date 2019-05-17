@@ -2,6 +2,7 @@
 
 $(document).ready(function () {
   var mq = null
+  var units = {}
 
   $('#connect').click(function () {
     if (mq !== null) return
@@ -9,13 +10,17 @@ $(document).ready(function () {
     mq = new MetricqWebSocket($('#uri').val())
 
     mq.onData = function (id, ts, val) {
-      $('#data').append(id + ': ' + ts + ' @ ' + val + '\n').scrollTop($('#data')[0].scrollHeight)
+      $('#data').append(id + ': ' + ts + ' @ ' + val + ' ' + units[id] + '\n').scrollTop($('#data')[0].scrollHeight)
+    }
+
+    mq.onMetaData = function (id, metadata) {
+      units[id] = metadata.unit
     }
 
     mq.onOpen = function (event) {
       $('#data').append('Connected.\n')
 
-      mq.subscribe(['elab.ariel.s0.package.power'])
+      mq.subscribe(['elab.ariel.power', 'elab.ariel.s0.package.power', 'elab.temp'])
     }
 
     mq.onConnecting = function (uri) {

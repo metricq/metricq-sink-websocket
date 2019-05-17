@@ -9,6 +9,7 @@ var MetricqWebSocket = function (uri) {
   this.onError = function (event) {}
   this.onConnecting = function (uri) {}
   this.onData = function (metric, timestamp, value) {}
+  this.onMetaData = function (metric, metadata) {}
 
   var webSocket = null
   var metricqWS = this
@@ -31,6 +32,10 @@ var MetricqWebSocket = function (uri) {
         for (var datapoint of response.data) {
           metricqWS.onData(datapoint.id, datapoint.ts, datapoint.value)
         }
+      } else if (response.hasOwnProperty('metadata')) {
+        Object.keys(response.metadata).forEach(function (metric) {
+          metricqWS.onMetaData(metric, response.metadata[metric])
+        })
       } else {
         console.log('[MetricqWebSocket] Received unknown message')
       }

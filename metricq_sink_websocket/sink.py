@@ -1,6 +1,5 @@
 import asyncio
 from collections import defaultdict
-import json
 from typing import Union, List, Iterable, Optional
 
 from bidict import bidict
@@ -17,6 +16,8 @@ class Sink(metricq.DurableSink):
         self._subscriptions = defaultdict(set)
         self._last_send = defaultdict(lambda: metricq.Timestamp(0))
 
+        self._metadata = {}
+
         self._internal_name_by_primary_name = None
         self._suffix = None
         self._mapping_lock = asyncio.Lock()
@@ -27,7 +28,7 @@ class Sink(metricq.DurableSink):
         await self.subscribe(metrics=[])
 
     @metricq.rpc_handler('config')
-    async def config(self, suffix: Optional[str]=None, skip_interval: str = '0.5s', **_) -> None:
+    async def config(self, suffix: Optional[str] = None, skip_interval: str = '0.5s', **_) -> None:
         self._min_interval = metricq.Timedelta.from_string(skip_interval)
 
         async with self._mapping_lock:
@@ -72,11 +73,11 @@ class Sink(metricq.DurableSink):
                     # For now, let's just subscribe even if it may not be in the metadata
                     self._internal_name_by_primary_name[metric] = metric
 
-    async def subscribe(self, metrics: Iterable[str]) -> None:
+    async def subscribe(self, metrics: Iterable[str], **kwargs) -> None:
         if self._suffix:
             await self._resolve_primary_metrics(metrics)
 
-        await super().subscribe(self._primary_to_internal(metrics))
+        return await super().subscribe(self._primary_to_internal(metrics), **kwargs)
 
     async def unsubscribe(self, metrics: Iterable[str]) -> None:
         await super().unsubscribe(self._primary_to_internal(metrics))
@@ -96,7 +97,11 @@ class Sink(metricq.DurableSink):
                 subscribe_metrics.add(metric)
             self._subscriptions[metric].add(ws)
         if subscribe_metrics:
-            await self.subscribe(list(subscribe_metrics))
+            response = await self.subscribe(list(subscribe_metrics), metadata=True)
+            for metric, metadata in response['metrics'].items():
+                self._metadata[self._internal_to_primary(metric)] = metadata
+
+        return {metric: self._metadata[metric] for metric in metrics}
 
     async def unsubscribe_ws(self, ws, metrics):
         unsubscribe_metrics = set()
@@ -105,6 +110,7 @@ class Sink(metricq.DurableSink):
                 self._subscriptions[metric].remove(ws)
                 if not self._subscriptions[metric]:
                     unsubscribe_metrics.add(metric)
+                    del self._metadata[metric]
             except KeyError as ke:
                 logger.error("failed to unsubscribe metric {}: {}", metric, ke)
         if unsubscribe_metrics:

@@ -16,6 +16,9 @@ class MetricqWebSocketResponse(aiohttp.web.WebSocketResponse):
         self._buffer = []
         self._flush_task = None
 
+    async def send_metadata(self, metadata):
+        await self.send_json({'metadata': metadata})
+
     async def send_data(self, metric, timestamp, value):
         self._buffer.append({'id': metric, 'ts': timestamp.posix_ns, 'value': value})
         if self._flush_task is None:

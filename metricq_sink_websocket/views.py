@@ -26,7 +26,8 @@ async def websocket_handler(request):
                     msg_data = json.loads(msg.data)
                     if msg_data['function'] == 'subscribe':
                         new_metrics = set(msg_data['metrics'])
-                        await sink.subscribe_ws(ws, new_metrics - metrics)
+                        metadata = await sink.subscribe_ws(ws, new_metrics - metrics)
+                        await ws.send_metadata(metadata)
                         metrics |= new_metrics
                 except Exception as e:
                     logger.error('error during message handling {}: {}', type(e), e)
