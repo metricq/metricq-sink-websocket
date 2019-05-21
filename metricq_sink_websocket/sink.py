@@ -27,8 +27,10 @@ class Sink(metricq.DurableSink):
         await super().connect()
         await self.subscribe(metrics=[])
 
-    @metricq.rpc_handler('config')
-    async def config(self, suffix: Optional[str] = None, skip_interval: str = '0.5s', **_) -> None:
+    @metricq.rpc_handler("config")
+    async def config(
+        self, suffix: Optional[str] = None, skip_interval: str = "0.5s", **_
+    ) -> None:
         self._min_interval = metricq.Timedelta.from_string(skip_interval)
 
         async with self._mapping_lock:
@@ -44,7 +46,9 @@ class Sink(metricq.DurableSink):
             return internal_metric
         return self._internal_name_by_primary_name.inverse[internal_metric]
 
-    def _primary_to_internal(self, primary_metric: Union[str, List[str]]) -> Union[str, List[str]]:
+    def _primary_to_internal(
+        self, primary_metric: Union[str, List[str]]
+    ) -> Union[str, List[str]]:
         if self._internal_name_by_primary_name is None:
             return primary_metric
         if isinstance(primary_metric, list):
@@ -53,23 +57,38 @@ class Sink(metricq.DurableSink):
 
     def _suffix_metric(self, metric: str) -> str:
         assert self._suffix
-        return metric + '.' + self._suffix
+        return metric + "." + self._suffix
 
     async def _resolve_primary_metrics(self, metrics):
         # Use a lock here so there aren't two subscriptions spamming the get_metrics
         # at the same time for redundant information
         async with self._mapping_lock:
-            unknown_metrics = set(metrics) - set(self._internal_name_by_primary_name.keys())
-            possible_metrics = [*unknown_metrics, *[self._suffix_metric(metric) for metric in unknown_metrics]]
-            available_metrics = set(await self.get_metrics(selector=possible_metrics, metadata=False))
+            unknown_metrics = set(metrics) - set(
+                self._internal_name_by_primary_name.keys()
+            )
+            possible_metrics = [
+                *unknown_metrics,
+                *[self._suffix_metric(metric) for metric in unknown_metrics],
+            ]
+            available_metrics = set(
+                await self.get_metrics(selector=possible_metrics, metadata=False)
+            )
 
             for metric in unknown_metrics:
                 if self._suffix_metric(metric) in available_metrics:
-                    logger.info('using suffix {} for primary {}', self._suffix_metric(metric), metric)
-                    self._internal_name_by_primary_name[metric] = self._suffix_metric(metric)
+                    logger.info(
+                        "using suffix {} for primary {}",
+                        self._suffix_metric(metric),
+                        metric,
+                    )
+                    self._internal_name_by_primary_name[metric] = self._suffix_metric(
+                        metric
+                    )
                 else:
                     if metric not in available_metrics:
-                        logger.warn('trying to subscribe to metric with no metadata {}', metric)
+                        logger.warn(
+                            "trying to subscribe to metric with no metadata {}", metric
+                        )
                     # For now, let's just subscribe even if it may not be in the metadata
                     self._internal_name_by_primary_name[metric] = metric
 
@@ -84,10 +103,13 @@ class Sink(metricq.DurableSink):
 
     async def on_data(self, metric, timestamp, value):
         primary_metric = self._internal_to_primary(metric)
-        if self._subscriptions[primary_metric] and self._last_send[primary_metric] + self._min_interval < timestamp:
+        if (
+            self._subscriptions[primary_metric]
+            and self._last_send[primary_metric] + self._min_interval < timestamp
+        ):
             self._last_send[primary_metric] = timestamp
             for ws in frozenset(self._subscriptions[primary_metric]):
-                logger.debug('Sending {} to {}', primary_metric, ws)
+                logger.debug("Sending {} to {}", primary_metric, ws)
                 await ws.send_data(primary_metric, timestamp, value)
 
     async def subscribe_ws(self, ws, metrics):
@@ -98,7 +120,7 @@ class Sink(metricq.DurableSink):
             self._subscriptions[metric].add(ws)
         if subscribe_metrics:
             response = await self.subscribe(list(subscribe_metrics), metadata=True)
-            for metric, metadata in response['metrics'].items():
+            for metric, metadata in response["metrics"].items():
                 self._metadata[self._internal_to_primary(metric)] = metadata
 
         return {metric: self._metadata[metric] for metric in metrics}

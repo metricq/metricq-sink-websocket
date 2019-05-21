@@ -12,30 +12,30 @@ logger = get_logger(__name__)
 
 
 async def websocket_handler(request):
-    logger.info('Websocket handler')
-    sink = request.app['sink']
+    logger.info("Websocket handler")
+    sink = request.app["sink"]
     ws = MetricqWebSocketResponse(sink)
     await ws.prepare(request)
-    logger.info('Websocket opened')
+    logger.info("Websocket opened")
     metrics = set()
     try:
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:
-                logger.debug('Parsing message: {}', msg.data)
+                logger.debug("Parsing message: {}", msg.data)
                 try:
                     msg_data = json.loads(msg.data)
-                    if msg_data['function'] == 'subscribe':
-                        new_metrics = set(msg_data['metrics'])
+                    if msg_data["function"] == "subscribe":
+                        new_metrics = set(msg_data["metrics"])
                         metadata = await sink.subscribe_ws(ws, new_metrics - metrics)
                         await ws.send_metadata(metadata)
                         metrics |= new_metrics
                 except Exception as e:
-                    logger.error('error during message handling {}: {}', type(e), e)
+                    logger.error("error during message handling {}: {}", type(e), e)
                     break
             elif msg.type == aiohttp.WSMsgType.ERROR:
-                logger.error('ws connection closed with exception {}', ws.exception())
+                logger.error("ws connection closed with exception {}", ws.exception())
                 break
-        logger.info('finished websocket message loop normally')
+        logger.info("finished websocket message loop normally")
     except Exception as e:
         logger.error("error during websocket message loop {}: {}", type(e), e)
         pass
@@ -46,5 +46,5 @@ async def websocket_handler(request):
         # FOR AIUR
         await asyncio.shield(sink.unsubscribe_ws(ws, list(metrics)))
 
-    logger.info('Websocket closed')
+    logger.info("Websocket closed")
     return ws

@@ -17,10 +17,10 @@ class MetricqWebSocketResponse(aiohttp.web.WebSocketResponse):
         self._flush_task = None
 
     async def send_metadata(self, metadata):
-        await self.send_json({'metadata': metadata})
+        await self.send_json({"metadata": metadata})
 
     async def send_data(self, metric, timestamp, value):
-        self._buffer.append({'id': metric, 'ts': timestamp.posix_ns, 'value': value})
+        self._buffer.append({"id": metric, "ts": timestamp.posix_ns, "value": value})
         if self._flush_task is None:
             self._flush_task = asyncio.create_task(self.delayed_flush())
         elif len(self._buffer) >= self._max_buffer:
@@ -33,11 +33,13 @@ class MetricqWebSocketResponse(aiohttp.web.WebSocketResponse):
         self._flush_task = None
 
     async def flush(self):
-        logger.debug('flushing buffer with {} values', len(self._buffer))
+        logger.debug("flushing buffer with {} values", len(self._buffer))
         try:
-            await self.send_json({'data': self._buffer})
+            await self.send_json({"data": self._buffer})
         except ConnectionResetError:
-            metrics = list({elem['id'] for elem in self._buffer})
-            logger.info('Unsubscribing stale websocket {} from metric {}', self, metrics)
+            metrics = list({elem["id"] for elem in self._buffer})
+            logger.info(
+                "Unsubscribing stale websocket {} from metric {}", self, metrics
+            )
             await self._sink.unsubscribe_ws(self, metrics)
         self._buffer = []
