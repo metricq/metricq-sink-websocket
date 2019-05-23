@@ -1,10 +1,9 @@
 import asyncio
 from collections import defaultdict
-from typing import Union, List, Iterable, Optional
-
-from bidict import bidict
+from typing import Iterable, List, Optional, Union
 
 import metricq
+from bidict import bidict
 from metricq import get_logger
 
 logger = get_logger(__name__)
@@ -70,9 +69,12 @@ class Sink(metricq.DurableSink):
                 *unknown_metrics,
                 *[self._suffix_metric(metric) for metric in unknown_metrics],
             ]
-            available_metrics = set(
-                await self.get_metrics(selector=possible_metrics, metadata=False)
-            )
+            if possible_metrics:
+                available_metrics = set(
+                    await self.get_metrics(selector=possible_metrics, metadata=False)
+                )
+            else:
+                available_metrics = []
 
             for metric in unknown_metrics:
                 if self._suffix_metric(metric) in available_metrics:
