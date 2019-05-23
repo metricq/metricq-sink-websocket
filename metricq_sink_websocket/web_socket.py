@@ -1,7 +1,6 @@
 import asyncio
 
 import aiohttp
-
 from metricq import get_logger
 
 logger = get_logger(__name__)
@@ -31,6 +30,10 @@ class MetricqWebSocketResponse(aiohttp.web.WebSocketResponse):
         await asyncio.sleep(self._delay)
         await self.flush()
         self._flush_task = None
+
+    def cancel(self):
+        if self._flush_task:
+            self._flush_task.cancel()
 
     async def flush(self):
         logger.debug("flushing buffer with {} values", len(self._buffer))

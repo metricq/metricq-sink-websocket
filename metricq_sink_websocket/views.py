@@ -44,6 +44,10 @@ async def websocket_handler(request):
         logger.error("error during websocket message loop {}: {}", type(e), e)
         pass
 
+    # Avoid delayed flushes. The unsubscribe right after will hopefully ensure that we
+    # don't get new metric data sent to the ws
+    ws.cancel()
+
     if metrics:
         # aiohttp brutally murders our task when the browser is closed hard
         # we must defend our precious unsubscription!
