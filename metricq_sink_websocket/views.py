@@ -1,12 +1,11 @@
-import json
 import asyncio
+import json
+import traceback
 
 import aiohttp
-
 from metricq import get_logger
 
 from .web_socket import MetricqWebSocketResponse
-
 
 logger = get_logger(__name__)
 
@@ -30,7 +29,12 @@ async def websocket_handler(request):
                         await ws.send_metadata(metadata)
                         metrics |= new_metrics
                 except Exception as e:
-                    logger.error("error during message handling {}: {}", type(e), e)
+                    logger.error(
+                        "error during message handling {}: {}\n{}",
+                        type(e),
+                        e,
+                        traceback.format_exc(),
+                    )
                     break
             elif msg.type == aiohttp.WSMsgType.ERROR:
                 logger.error("ws connection closed with exception {}", ws.exception())
