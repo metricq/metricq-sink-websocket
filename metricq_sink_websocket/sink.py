@@ -20,6 +20,7 @@ class Sink(metricq.DurableSink):
         self._internal_name_by_primary_name = None
         self._suffix = None
         self._mapping_lock = asyncio.Lock()
+        self._subscribe_lock = asyncio.Lock()
         self._min_interval = None
 
     async def connect(self):
@@ -115,17 +116,18 @@ class Sink(metricq.DurableSink):
                 await ws.send_data(primary_metric, timestamp, value)
 
     async def subscribe_ws(self, ws, metrics):
-        subscribe_metrics = set()
-        for metric in metrics:
-            if not self._subscriptions[metric]:
-                subscribe_metrics.add(metric)
-            self._subscriptions[metric].add(ws)
-        if subscribe_metrics:
-            response = await self.subscribe(list(subscribe_metrics), metadata=True)
-            for metric, metadata in response["metrics"].items():
-                self._metadata[self._internal_to_primary(metric)] = metadata
+        async with self._subscribe_lock:
+            subscribe_metrics = set()
+            for metric in metrics:
+                if not self._subscriptions[metric]:
+                    subscribe_metrics.add(metric)
+                self._subscriptions[metric].add(ws)
+            if subscribe_metrics:
+                response = await self.subscribe(list(subscribe_metrics), metadata=True)
+                for metric, metadata in response["metrics"].items():
+                    self._metadata[self._internal_to_primary(metric)] = metadata
 
-        return {metric: self._metadata[metric] for metric in metrics}
+            return {metric: self._metadata[metric] for metric in metrics}
 
     async def unsubscribe_ws(self, ws, metrics):
         unsubscribe_metrics = set()
