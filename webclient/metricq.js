@@ -29,9 +29,9 @@ var MetricqWebSocket = function (uri) {
         console.log('[MetricqWebSocket] Received error message:' + response.error)
         metricqWS.onError(response.error)
       } else if (response.hasOwnProperty('data')) {
-        for (var datapoint of response.data) {
+        response.data.forEach(function (datapoint) {
           metricqWS.onData(datapoint.id, datapoint.ts, datapoint.value)
-        }
+        })
       } else if (response.hasOwnProperty('metadata')) {
         Object.keys(response.metadata).forEach(function (metric) {
           metricqWS.onMetaData(metric, response.metadata[metric])
