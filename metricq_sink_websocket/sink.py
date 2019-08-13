@@ -97,7 +97,7 @@ class Sink(metricq.DurableSink):
 
     async def subscribe(self, metrics: Iterable[str], **kwargs) -> None:
         if self._suffix:
-            await self._resolve_primary_metrics(metrics)
+            await asyncio.shield(self._resolve_primary_metrics(metrics))
 
         return await super().subscribe(self._primary_to_internal(metrics), **kwargs)
 
