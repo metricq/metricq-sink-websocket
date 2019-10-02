@@ -34,7 +34,12 @@ var MetricqWebSocket = function (uri) {
         })
       } else if (response.hasOwnProperty('metadata')) {
         Object.keys(response.metadata).forEach(function (metric) {
-          metricqWS.onMetaData(metric, response.metadata[metric])
+          if (response.metadata[metric] == null) {
+            metricqWS.onError('Coudn\'t find metadata for the metric \'' + metric + '\'. This probably means that the metric does not exists.')
+          }
+          else {
+            metricqWS.onMetaData(metric, response.metadata[metric])
+          }
         })
       } else {
         console.log('[MetricqWebSocket] Received unknown message')
