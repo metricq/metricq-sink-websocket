@@ -1,3 +1,4 @@
+from math import isfinite
 import asyncio
 from collections import defaultdict
 from typing import Iterable, List, Optional, Union
@@ -105,6 +106,9 @@ class Sink(metricq.DurableSink):
         await super().unsubscribe(self._primary_to_internal(metrics))
 
     async def on_data(self, metric, timestamp, value):
+        if not isfinite(value):
+            return
+
         primary_metric = self._internal_to_primary(metric)
         if (
             self._subscriptions[primary_metric]
