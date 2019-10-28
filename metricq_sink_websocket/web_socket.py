@@ -39,7 +39,7 @@ class MetricqWebSocketResponse(aiohttp.web.WebSocketResponse):
         logger.debug("flushing buffer with {} values", len(self._buffer))
         try:
             await self.send_json({"data": self._buffer})
-        except ConnectionResetError:
+        except (ConnectionResetError, RuntimeError):
             metrics = list({elem["id"] for elem in self._buffer})
             logger.info(
                 "Unsubscribing stale websocket {} from metric {}", self, metrics
