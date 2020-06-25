@@ -131,7 +131,10 @@ class Sink(metricq.DurableSink):
                 for metric, metadata in response["metrics"].items():
                     self._metadata[self._internal_to_primary(metric)] = metadata
 
-            return {metric: self._metadata[metric] for metric in metrics}
+            return {
+                metric: self._metadata[metric] if metric in self._metadata else None
+                for metric in metrics
+            }
 
     async def unsubscribe_ws(self, ws, metrics):
         unsubscribe_metrics = set()
