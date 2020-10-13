@@ -40,7 +40,7 @@ async def metricq_disconnect_handler(app):
         # for some reason, the websocket sink keeps going in a zombie state. To
         # mitigate this, we increased the reconnect timeout in MetricQ and this
         # commit. For now, we brutally use sys.exit to shutdown.
-        sys.exit(1)
+        sys.exit(2)
 
 
 async def start_background_tasks(app):
