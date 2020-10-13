@@ -1,5 +1,6 @@
 import logging
 import traceback
+import sys
 
 import asyncio
 import click
@@ -25,10 +26,29 @@ logger.handlers[0].formatter = logging.Formatter(
 click_completion.init()
 
 
+async def metricq_disconnect_handler(app):
+    logger.info("MetricQ is running...")
+
+    try:
+        await app["sink"].stopped()
+    except Exception as e:
+        logger.fatal("Something happend to our MetricQ Connection: {}", e)
+
+        # When the MetricQ connection fails, there is a reconnect timeout during
+        # which reconnects are tried. If the reconnect fails for the whole time,
+        # it is considered gone for good and the client should exit. However,
+        # for some reason, the websocket sink keeps going in a zombie state. To
+        # mitigate this, we increased the reconnect timeout in MetricQ and this
+        # commit. For now, we brutally use sys.exit to shutdown.
+        sys.exit(1)
+
+
 async def start_background_tasks(app):
     app["sink"] = Sink(app["token"], app["management_url"], event_loop=app.loop)
     await app["sink"].connect()
     logger.info("Background task ready.")
+
+    asyncio.create_task(metricq_disconnect_handler(app))
 
 
 async def cleanup_background_tasks(app):
