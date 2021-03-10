@@ -92,9 +92,10 @@ def panic(loop, context):
 @click.argument("management-url", default="amqp://localhost/")
 @click.option("--token", default="metricq-sink-websocket")
 @click.option("--management-exchange", default="metricq.management")
+@click.option("--host", default="0.0.0.0")
 @click.option("--port", default="3000")
 @click_log.simple_verbosity_option(logger)
-def runserver_cmd(management_url, token, management_exchange, port):
+def runserver_cmd(management_url, token, management_exchange, host, port):
     try:
         import uvloop
 
@@ -109,4 +110,4 @@ def runserver_cmd(management_url, token, management_exchange, port):
     # loop.set_exception_handler(panic)
     app = create_app(loop, token, management_url, management_exchange, port)
     # logger.info("starting management loop")
-    web.run_app(app, port=port)
+    web.run_app(app, host=host, port=port)
