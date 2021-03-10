@@ -69,7 +69,6 @@ def create_app(loop, token, management_url, management_exchange, port):
         app,
         defaults={
             # Allow all to read all CORS-enabled resources from
-            # http://client.example.org.
             f"http://localhost:{port}": aiohttp_cors.ResourceOptions(
                 allow_headers=("Content-Type",)
             )
@@ -106,8 +105,5 @@ def runserver_cmd(management_url, token, management_exchange, host, port):
         logger.debug("using default event loop")
 
     loop = asyncio.get_event_loop()
-    # loop.set_debug(True)
-    # loop.set_exception_handler(panic)
     app = create_app(loop, token, management_url, management_exchange, port)
-    # logger.info("starting management loop")
     web.run_app(app, host=host, port=port)
