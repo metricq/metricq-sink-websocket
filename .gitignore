@@ -4,3 +4,6 @@ __pycache__
 
 venv
 VENV
+
+# created by setuptools_scm
+metricq_sink_websocket/version.py

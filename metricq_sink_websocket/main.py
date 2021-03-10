@@ -14,6 +14,7 @@ from metricq import get_logger
 
 from .routes import setup_routes
 from .sink import Sink
+from .version import version as client_version
 
 logger = get_logger()
 
@@ -44,7 +45,12 @@ async def metricq_disconnect_handler(app):
 
 
 async def start_background_tasks(app):
-    app["sink"] = Sink(app["token"], app["management_url"], event_loop=app.loop)
+    app["sink"] = Sink(
+        app["token"],
+        app["management_url"],
+        client_version=client_version,
+        event_loop=app.loop,
+    )
     await app["sink"].connect()
     logger.info("Background task ready.")
 
@@ -93,6 +99,7 @@ def panic(loop, context):
 @click.option("--management-exchange", default="metricq.management")
 @click.option("--host", default="0.0.0.0")
 @click.option("--port", default="3000")
+@click.version_option(client_version)
 @click_log.simple_verbosity_option(logger)
 def runserver_cmd(management_url, token, management_exchange, host, port):
     try:
