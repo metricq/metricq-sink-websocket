@@ -22,4 +22,5 @@ setup(
         "metricq",
     ],
     extras_require={"uvloop": ["uvloop"]},
+    use_scm_version=True,
 )

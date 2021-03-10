@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]~=5.0"]
+build-backend = "setuptools.build_meta:__legacy__"
+
 [tool.black]
 line-length = 88
 target_version = ['py37']
@@ -23,3 +27,6 @@ exclude = '''
   )/
 )
 '''
+
+[tool.setuptools_scm]
+write_to = "metricq_sink_websocket/version.py"
