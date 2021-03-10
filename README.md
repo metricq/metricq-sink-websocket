@@ -1,3 +1,4 @@
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 # metricq-sink-websocket
 🕸 A MetricQ sink, which provides live data to consumers over WebSocket connections
 
