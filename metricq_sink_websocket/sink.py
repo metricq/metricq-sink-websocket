@@ -137,14 +137,15 @@ class Sink(metricq.DurableSink):
             }
 
     async def unsubscribe_ws(self, ws, metrics):
-        unsubscribe_metrics = set()
-        for metric in metrics:
-            try:
-                self._subscriptions[metric].remove(ws)
-                if not self._subscriptions[metric]:
-                    unsubscribe_metrics.add(metric)
-                    del self._metadata[metric]
-            except KeyError as ke:
-                logger.error("failed to unsubscribe metric {}: {}", metric, ke)
-        if unsubscribe_metrics:
-            await self.unsubscribe(list(unsubscribe_metrics))
+        async with self._subscribe_lock:
+            unsubscribe_metrics = set()
+            for metric in metrics:
+                try:
+                    self._subscriptions[metric].remove(ws)
+                    if not self._subscriptions[metric]:
+                        unsubscribe_metrics.add(metric)
+                        del self._metadata[metric]
+                except KeyError as ke:
+                    logger.error("failed to unsubscribe metric {}: {}", metric, ke)
+            if unsubscribe_metrics:
+                await self.unsubscribe(list(unsubscribe_metrics))
