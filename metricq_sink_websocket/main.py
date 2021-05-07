@@ -85,14 +85,6 @@ def create_app(loop, token, management_url, management_exchange, port):
     return app
 
 
-def panic(loop, context):
-    print("EXCEPTION: {}".format(context["message"]))
-    if context["exception"]:
-        print(context["exception"])
-        traceback.print_tb(context["exception"].__traceback__)
-    loop.stop()
-
-
 @click.command()
 @click.argument("management-url", default="amqp://localhost/")
 @click.option("--token", default="metricq-sink-websocket")
