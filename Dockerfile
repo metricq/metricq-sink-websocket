@@ -11,7 +11,7 @@ COPY --chown=metricq:metricq . /home/metricq/metricq_sink_websocket
 USER metricq
 WORKDIR /home/metricq/metricq_sink_websocket
 
-RUN pip install --user .
+RUN pip install --user . uvloop
 
 
 FROM metricq/metricq-python:v4.2
