@@ -49,7 +49,6 @@ async def start_background_tasks(app):
         app["token"],
         app["management_url"],
         client_version=client_version,
-        event_loop=app.loop,
     )
     await app["sink"].connect()
     logger.info("Background task ready.")
@@ -61,8 +60,8 @@ async def cleanup_background_tasks(app):
     pass
 
 
-def create_app(loop, token, management_url, management_exchange, port):
-    app = web.Application(loop=loop)
+def create_app(token, management_url, management_exchange, port):
+    app = web.Application()
     app["token"] = token
     app["management_url"] = management_url
     app["management_exchange"] = management_exchange
@@ -97,12 +96,10 @@ def runserver_cmd(management_url, token, management_exchange, host, port):
     try:
         import uvloop
 
-        asyncio.get_event_loop().close()
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        uvloop.install()
         logger.info("using uvloop as event loop")
     except ImportError:
         logger.debug("using default event loop")
 
-    loop = asyncio.get_event_loop()
-    app = create_app(loop, token, management_url, management_exchange, port)
+    app = create_app(token, management_url, management_exchange, port)
     web.run_app(app, host=host, port=port)
