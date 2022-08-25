@@ -4,7 +4,7 @@ USER root
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     git \
-    build-essentials \
+    build-essential \
     && rm -rf /var/lib/apt/lists/* 
 
 COPY --chown=metricq:metricq . /home/metricq/metricq_sink_websocket
