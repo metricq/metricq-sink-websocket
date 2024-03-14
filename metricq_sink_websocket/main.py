@@ -4,11 +4,11 @@ import sys
 
 import asyncio
 import click
-import click_completion
-import click_log
+import click_completion  # type: ignore
+import click_log  # type: ignore
 
 from aiohttp import web
-import aiohttp_cors
+import aiohttp_cors  # type: ignore
 
 from metricq import get_logger
 
@@ -94,7 +94,7 @@ def create_app(token, management_url, management_exchange, port):
 @click_log.simple_verbosity_option(logger)
 def runserver_cmd(management_url, token, management_exchange, host, port):
     try:
-        import uvloop
+        import uvloop  # type: ignore
 
         uvloop.install()
         logger.info("using uvloop as event loop")

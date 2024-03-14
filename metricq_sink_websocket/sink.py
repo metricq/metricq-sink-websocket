@@ -1,11 +1,12 @@
 from math import isfinite
 import asyncio
 from collections import defaultdict
-from typing import Iterable, List, Optional, Union
+from typing import Optional, overload
 
 import metricq
 from bidict import bidict
 from metricq import get_logger
+from metricq.types import Metric, JsonDict
 
 logger = get_logger(__name__)
 
@@ -47,9 +48,13 @@ class Sink(metricq.DurableSink):
             return internal_metric
         return self._internal_name_by_primary_name.inverse[internal_metric]
 
-    def _primary_to_internal(
-        self, primary_metric: Union[str, List[str]]
-    ) -> Union[str, List[str]]:
+    @overload
+    def _primary_to_internal(self, primary_metric: str) -> str: ...
+
+    @overload
+    def _primary_to_internal(self, primary_metric: list[str]) -> list[str]: ...
+
+    def _primary_to_internal(self, primary_metric: str | list[str]) -> str | list[str]:
         if self._internal_name_by_primary_name is None:
             return primary_metric
         if isinstance(primary_metric, list):
@@ -96,13 +101,15 @@ class Sink(metricq.DurableSink):
                     # For now, let's just subscribe even if it may not be in the metadata
                     self._internal_name_by_primary_name[metric] = metric
 
-    async def subscribe(self, metrics: Iterable[str], **kwargs) -> None:
+    async def subscribe(self, metrics: list[Metric], *args, **kwargs) -> JsonDict:
         if self._suffix:
             await asyncio.shield(self._resolve_primary_metrics(metrics))
 
-        return await super().subscribe(self._primary_to_internal(metrics), **kwargs)
+        return await super().subscribe(
+            self._primary_to_internal(metrics), *args, **kwargs
+        )
 
-    async def unsubscribe(self, metrics: Iterable[str]) -> None:
+    async def unsubscribe(self, metrics: list[Metric]) -> None:
         await super().unsubscribe(self._primary_to_internal(metrics))
 
     async def on_data(self, metric, timestamp, value):
