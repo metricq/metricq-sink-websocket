@@ -1,12 +1,14 @@
 from math import isfinite
 import asyncio
 from collections import defaultdict
-from typing import Optional, overload, Any, Iterable
+
+# We must use the collections.abc.Iterable, because we use it in isinstance!
+from collections.abc import Iterable
+from typing import Optional, overload, Any
 
 import metricq
 from bidict import bidict
-from metricq import get_logger
-from metricq.types import Metric, JsonDict, Timestamp, Timedelta
+from metricq import get_logger, Metric, JsonDict, Timestamp, Timedelta
 
 from .web_socket import MetricqWebSocketResponse
 
@@ -58,12 +60,14 @@ class Sink(metricq.DurableSink):
     def _primary_to_internal(self, primary_metric: str) -> str: ...
 
     @overload
-    def _primary_to_internal(self, primary_metric: list[str]) -> list[str]: ...
+    def _primary_to_internal(self, primary_metric: Iterable[str]) -> Iterable[str]: ...
 
-    def _primary_to_internal(self, primary_metric: str | list[str]) -> str | list[str]:
+    def _primary_to_internal(
+        self, primary_metric: str | Iterable[str]
+    ) -> str | Iterable[str]:
         if self._internal_name_by_primary_name is None:
             return primary_metric
-        if isinstance(primary_metric, list):
+        if isinstance(primary_metric, Iterable):
             return list(map(self._primary_to_internal, primary_metric))
         return self._internal_name_by_primary_name[primary_metric]
 
@@ -109,7 +113,7 @@ class Sink(metricq.DurableSink):
                     self._internal_name_by_primary_name[metric] = metric
 
     async def subscribe(
-        self, metrics: list[Metric], *args: Any, **kwargs: Any
+        self, metrics: Iterable[Metric], *args: Any, **kwargs: Any
     ) -> JsonDict:
         if self._suffix:
             await asyncio.shield(self._resolve_primary_metrics(metrics))
@@ -118,7 +122,7 @@ class Sink(metricq.DurableSink):
             self._primary_to_internal(metrics), *args, **kwargs
         )
 
-    async def unsubscribe(self, metrics: list[Metric]) -> None:
+    async def unsubscribe(self, metrics: Iterable[Metric]) -> None:
         await super().unsubscribe(self._primary_to_internal(metrics))
 
     async def on_data(self, metric: Metric, timestamp: Timestamp, value: float) -> None:

@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
-from metricq import get_logger
-from metricq.types import Metric, Timestamp, JsonDict
+from metricq import get_logger, Metric, Timestamp, JsonDict
 
 logger = get_logger(__name__)
 
