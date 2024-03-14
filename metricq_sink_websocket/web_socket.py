@@ -1,9 +1,10 @@
-import asyncio
 from __future__ import annotations
+
+import asyncio
 from typing import TYPE_CHECKING, TypedDict
 
 import aiohttp
-from metricq import get_logger, Metric, Timestamp, JsonDict
+from metricq import JsonDict, Metric, Timestamp, get_logger
 
 logger = get_logger(__name__)
 

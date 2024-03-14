@@ -1,14 +1,12 @@
+import asyncio
 import logging
 import sys
 
-import asyncio
+import aiohttp_cors  # type: ignore
 import click
 import click_completion  # type: ignore
 import click_log  # type: ignore
-
 from aiohttp import web
-import aiohttp_cors  # type: ignore
-
 from metricq import get_logger
 
 from .routes import setup_routes

@@ -1,14 +1,14 @@
-from math import isfinite
 import asyncio
 from collections import defaultdict
 
 # We must use the collections.abc.Iterable, because we use it in isinstance!
 from collections.abc import Iterable
-from typing import Optional, overload, Any
+from math import isfinite
+from typing import Any, Optional, overload
 
 import metricq
 from bidict import bidict
-from metricq import get_logger, Metric, JsonDict, Timestamp, Timedelta
+from metricq import JsonDict, Metric, Timedelta, Timestamp, get_logger
 
 from .web_socket import MetricqWebSocketResponse
 
