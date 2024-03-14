@@ -4,7 +4,7 @@ import traceback
 
 import aiohttp
 from aiohttp.web import Request
-from metricq import get_logger, JsonDict
+from metricq import JsonDict, get_logger
 
 from .web_socket import MetricqWebSocketResponse
 
