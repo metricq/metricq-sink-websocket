@@ -3,20 +3,22 @@ import json
 import traceback
 
 import aiohttp
+from aiohttp.web import Request
 from metricq import get_logger
+from metricq.types import JsonDict
 
 from .web_socket import MetricqWebSocketResponse
 
 logger = get_logger(__name__)
 
 
-async def websocket_handler(request):
+async def websocket_handler(request: Request) -> MetricqWebSocketResponse:
     logger.info("Websocket handler")
     sink = request.app["sink"]
     ws = MetricqWebSocketResponse(sink)
     await ws.prepare(request)
     logger.info("Websocket opened")
-    metrics = set()
+    metrics: set[JsonDict] = set()
     try:
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:

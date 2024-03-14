@@ -1,5 +1,4 @@
 import logging
-import traceback
 import sys
 
 import asyncio
@@ -27,7 +26,7 @@ logger.handlers[0].formatter = logging.Formatter(
 click_completion.init()
 
 
-async def metricq_disconnect_handler(app):
+async def metricq_disconnect_handler(app: web.Application) -> None:
     logger.info("MetricQ is running...")
 
     try:
@@ -44,7 +43,7 @@ async def metricq_disconnect_handler(app):
         sys.exit(2)
 
 
-async def start_background_tasks(app):
+async def start_background_tasks(app: web.Application) -> None:
     app["sink"] = Sink(
         app["token"],
         app["management_url"],
@@ -56,11 +55,13 @@ async def start_background_tasks(app):
     asyncio.create_task(metricq_disconnect_handler(app))
 
 
-async def cleanup_background_tasks(app):
+async def cleanup_background_tasks(app: web.Application) -> None:
     pass
 
 
-def create_app(token, management_url, management_exchange, port):
+def create_app(
+    token: str, management_url: str, management_exchange: str, port: int
+) -> web.Application:
     app = web.Application()
     app["token"] = token
     app["management_url"] = management_url
@@ -89,10 +90,12 @@ def create_app(token, management_url, management_exchange, port):
 @click.option("--token", default="metricq-sink-websocket")
 @click.option("--management-exchange", default="metricq.management")
 @click.option("--host", default="0.0.0.0")
-@click.option("--port", default="3000")
+@click.option("--port", type=int, default=3000)
 @click.version_option(client_version)
-@click_log.simple_verbosity_option(logger)
-def runserver_cmd(management_url, token, management_exchange, host, port):
+@click_log.simple_verbosity_option(logger)  # type: ignore
+def runserver_cmd(
+    management_url: str, token: str, management_exchange: str, host: str, port: int
+) -> None:
     try:
         import uvloop  # type: ignore
 
