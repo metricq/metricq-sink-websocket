@@ -43,9 +43,7 @@ async def metricq_disconnect_handler(app: web.Application) -> None:
 
 async def start_background_tasks(app: web.Application) -> None:
     app["sink"] = Sink(
-        app["token"],
-        app["management_url"],
-        client_version=client_version,
+        token=app["token"], url=app["url"], client_version=client_version
     )
     await app["sink"].connect()
     logger.info("Background task ready.")
@@ -57,13 +55,10 @@ async def cleanup_background_tasks(app: web.Application) -> None:
     pass
 
 
-def create_app(
-    token: str, management_url: str, management_exchange: str, port: int
-) -> web.Application:
+def create_app(token: str, url: str, port: int) -> web.Application:
     app = web.Application()
     app["token"] = token
-    app["management_url"] = management_url
-    app["management_exchange"] = management_exchange
+    app["url"] = url
     app["last_perf_list"] = []
 
     app.on_startup.append(start_background_tasks)
@@ -84,16 +79,13 @@ def create_app(
 
 
 @click.command()
-@click.argument("management-url", default="amqp://localhost/")
+@click.argument("url", default="amqp://localhost/")
 @click.option("--token", default="metricq-sink-websocket")
-@click.option("--management-exchange", default="metricq.management")
 @click.option("--host", default="0.0.0.0")
 @click.option("--port", type=int, default=3000)
 @click.version_option(client_version)
 @click_log.simple_verbosity_option(logger)  # type: ignore
-def runserver_cmd(
-    management_url: str, token: str, management_exchange: str, host: str, port: int
-) -> None:
+def runserver_cmd(url: str, token: str, host: str, port: int) -> None:
     try:
         import uvloop  # type: ignore
 
@@ -102,5 +94,5 @@ def runserver_cmd(
     except ImportError:
         logger.debug("using default event loop")
 
-    app = create_app(token, management_url, management_exchange, port)
+    app = create_app(token, url, port)
     web.run_app(app, host=host, port=port)
