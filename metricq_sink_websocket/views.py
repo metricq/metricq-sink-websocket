@@ -4,7 +4,7 @@ import traceback
 
 import aiohttp
 from aiohttp.web import Request
-from metricq import JsonDict, get_logger
+from metricq import Metric, get_logger
 
 from .web_socket import MetricqWebSocketResponse
 
@@ -17,7 +17,7 @@ async def websocket_handler(request: Request) -> MetricqWebSocketResponse:
     ws = MetricqWebSocketResponse(sink)
     await ws.prepare(request)
     logger.info("Websocket opened")
-    metrics: set[JsonDict] = set()
+    metrics: set[Metric] = set()
     try:
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:
@@ -25,7 +25,11 @@ async def websocket_handler(request: Request) -> MetricqWebSocketResponse:
                 try:
                     msg_data = json.loads(msg.data)
                     if msg_data["function"] == "subscribe":
-                        new_metrics = set(msg_data["metrics"])
+                        if not isinstance(list, msg_data["metrics"]) or any(
+                            not isinstance(m, str) for m in msg_data["metrics"]
+                        ):
+                            raise TypeError("metrics must be a list of strings")
+                        new_metrics: set[str] = set(msg_data["metrics"])
                         metadata = await sink.subscribe_ws(ws, new_metrics - metrics)
                         await ws.send_metadata(metadata)
                         metrics |= new_metrics
