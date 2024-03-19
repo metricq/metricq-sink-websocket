@@ -25,7 +25,7 @@ async def websocket_handler(request: Request) -> MetricqWebSocketResponse:
                 try:
                     msg_data = json.loads(msg.data)
                     if msg_data["function"] == "subscribe":
-                        if not isinstance(list, msg_data["metrics"]) or any(
+                        if not isinstance(msg_data["metrics"], list) or any(
                             not isinstance(m, str) for m in msg_data["metrics"]
                         ):
                             raise TypeError("metrics must be a list of strings")
