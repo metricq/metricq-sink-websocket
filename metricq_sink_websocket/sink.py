@@ -60,16 +60,19 @@ class Sink(metricq.DurableSink):
     def _primary_to_internal(self, primary_metric: str) -> str: ...
 
     @overload
-    def _primary_to_internal(self, primary_metric: Iterable[str]) -> Iterable[str]: ...
+    def _primary_to_internal(self, primary_metric: Iterable[str]) -> list[str]: ...
 
     def _primary_to_internal(
         self, primary_metric: str | Iterable[str]
-    ) -> str | Iterable[str]:
+    ) -> str | list[str]:
         if self._internal_name_by_primary_name is None:
             return primary_metric
-        if isinstance(primary_metric, Iterable):
-            return list(map(self._primary_to_internal, primary_metric))
-        return self._internal_name_by_primary_name[primary_metric]
+        if isinstance(primary_metric, str):
+            return self._internal_name_by_primary_name[primary_metric]
+        elif isinstance(primary_metric, Iterable):
+            return [self._primary_to_internal(metric) for metric in primary_metric]
+        else:
+            raise TypeError("primary_metric is neither a string nor a sequence of strings")
 
     def _suffix_metric(self, metric: str) -> str:
         assert self._suffix
