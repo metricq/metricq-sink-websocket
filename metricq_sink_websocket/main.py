@@ -83,7 +83,6 @@ def create_app(token: str, url: str, port: int) -> web.Application:
 @click.option("--host", default="0.0.0.0")
 @click.option("--port", type=int, default=3000)
 @click.version_option(client_version)
-@click_log.simple_verbosity_option(logger)  # type: ignore
 def runserver_cmd(server: str, token: str, host: str, port: int) -> None:
     try:
         import uvloop  # type: ignore
