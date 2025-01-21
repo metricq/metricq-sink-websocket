@@ -8,6 +8,7 @@ import click_completion  # type: ignore
 import click_log  # type: ignore
 from aiohttp import web
 from metricq import get_logger
+from metricq.cli import metricq_command
 
 from .routes import setup_routes
 from .sink import Sink
@@ -78,14 +79,11 @@ def create_app(token: str, url: str, port: int) -> web.Application:
     return app
 
 
-@click.command()
-@click.argument("url", default="amqp://localhost/")
-@click.option("--token", default="metricq-sink-websocket")
+@metricq_command(default_token="metricq-sink-websocket")
 @click.option("--host", default="0.0.0.0")
 @click.option("--port", type=int, default=3000)
 @click.version_option(client_version)
-@click_log.simple_verbosity_option(logger)  # type: ignore
-def runserver_cmd(url: str, token: str, host: str, port: int) -> None:
+def runserver_cmd(server: str, token: str, host: str, port: int) -> None:
     try:
         import uvloop  # type: ignore
 
@@ -94,5 +92,5 @@ def runserver_cmd(url: str, token: str, host: str, port: int) -> None:
     except ImportError:
         logger.debug("using default event loop")
 
-    app = create_app(token, url, port)
+    app = create_app(token, server, port)
     web.run_app(app, host=host, port=port)
